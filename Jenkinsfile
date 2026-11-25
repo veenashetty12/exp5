@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/your-username/MyApplication.git'
+                    url: 'https://github.com/veenashetty12/exp5.git'
             }
         }
 
