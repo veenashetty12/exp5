@@ -1,37 +1,41 @@
+
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     environment {
-        DOCKER_IMAGE = 'your-dockerhub-username/jenkins-demo'
-        DOCKER_CREDENTIALS = 'dockerhub_credentials'
+        DOCKER_CLI = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        DOCKER_IMAGE = 'veenaaaa/jenkins-demo'
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/veenashetty12/exp5.git'
+                checkout scm
             }
         }
 
         stage('Build Application') {
             steps {
-                echo 'Building the application...'
+                echo 'Checking application files...'
                 bat 'dir'
             }
         }
-        stage('Test Docker from Jenkins') {
-    steps {
-        bat '''
-            "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version
-        '''
-    }
-}
+
+        stage('Test Docker') {
+            steps {
+                bat '"%DOCKER_CLI%" version'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %DOCKER_IMAGE%:latest .'
+                echo 'Building Docker image...'
+                bat '"%DOCKER_CLI%" build -t %DOCKER_IMAGE%:latest .'
             }
         }
 
@@ -44,9 +48,17 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
-                    bat 'docker push %DOCKER_IMAGE%:latest'
-                    bat 'docker logout'
+                    powershell '''
+                        $ErrorActionPreference = 'Stop'
+
+                        $env:DOCKER_PASS | & $env:DOCKER_CLI login --username $env:DOCKER_USER --password-stdin
+                        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+                        & $env:DOCKER_CLI push "$($env:DOCKER_IMAGE):latest"
+                        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+                        & $env:DOCKER_CLI logout
+                    '''
                 }
             }
         }
