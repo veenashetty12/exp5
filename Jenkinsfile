@@ -21,6 +21,13 @@ pipeline {
                 bat 'dir'
             }
         }
+        stage('Test Docker from Jenkins') {
+    steps {
+        bat '''
+            "C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version
+        '''
+    }
+}
 
         stage('Build Docker Image') {
             steps {
